@@ -1,0 +1,1 @@
+C:\Users\202317\AppData\Local\Programs\Python\Python312\python.exe: No module named graphrag.index.__main__; 'graphrag.index' is a package and cannot be directly executed
