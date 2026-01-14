@@ -65,3 +65,5 @@ debug.log
 last_run.txt
 restore_prompt.py
 test_download.py
+
+.sfdx/
