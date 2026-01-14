@@ -1,183 +1,312 @@
-# GraphRAG - Codebase Analysis Tool 🚀
+# Agentic Engineering Knowledge Copilot (AEKC)
 
-A powerful GraphRAG-based application optimized for analyzing and understanding codebases through knowledge graph visualization.
+A multi-agent system powered by LangGraph that intelligently analyzes codebases using GraphRAG and provides formatted, context-aware responses.
 
-## 🎯 Features
+## 🎯 Overview
 
-- **Codebase Ingestion**: Automatically clone and process GitHub repositories
-- **AI-Powered Analysis**: Extract entities (Classes, Functions, Files, Variables) and relationships
-- **Interactive Graph Visualization**: Explore code dependencies and structure visually
-- **Intelligent Querying**: Ask questions about your codebase using natural language
-- **Private Repository Support**: Authenticate with GitHub tokens
+AEKC combines multiple AI agents to provide comprehensive code analysis:
+- **Intent Classification**: Understands what you're asking
+- **GraphRAG Integration**: Queries indexed code knowledge graphs
+- **Multi-Agent Orchestration**: Parallel execution for faster responses
+- **GPT-4 Synthesis**: Generates clean, markdown-formatted answers
 
 ## 🏗️ Architecture
 
 ```
-GitHub Repository
-    ↓
-Download & Process (utils.py)
-    ↓
-GraphRAG Indexing (AI Extraction)
-    ↓
-Graph Storage (Parquet Files)
-    ↓
-FastAPI Backend
-    ↓
-React Frontend (Graph Visualization)
+┌─────────────┐
+│   User UI   │ (React + Markdown Rendering)
+└──────┬──────┘
+       │
+┌──────▼──────┐
+│  FastAPI    │ (Backend Server)
+└──────┬──────┘
+       │
+┌──────▼──────────┐
+│ LangGraph       │ (Multi-Agent Orchestrator)
+│ Main Graph      │
+└──────┬──────────┘
+       │
+   ┌───┴────┬────────┬─────────┬──────────┐
+   ▼        ▼        ▼         ▼          ▼
+┌──────┐ ┌────┐ ┌────────┐ ┌──────┐ ┌──────┐
+│Intent│ │RAG │ │GraphRAG│ │Tools │ │Risk  │
+│Agent │ │    │ │ Agent  │ │Agent │ │Agent │
+└──┬───┘ └─┬──┘ └───┬────┘ └──┬───┘ └──┬───┘
+   │       │        │         │        │
+   └───────┴────────┴─────────┴────────┘
+                    │
+            ┌───────▼────────┐
+            │ GPT-4 Synthesis│
+            │ (Final Answer) │
+            └────────────────┘
 ```
-
-## 📋 Prerequisites
-
-- Python 3.10-3.12
-- Node.js 16+
-- OpenAI API Key
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- OpenAI API Key
 
-**Backend:**
+### Installation
+
+1. **Clone and Setup**
+```bash
+cd "c:\Users\202317\Graph Knowledge\GraphRag"
+```
+
+2. **Install Python Dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-**Frontend:**
+3. **Install Frontend Dependencies**
 ```bash
 cd simple_rag_app/frontend
 npm install
+cd ../..
 ```
 
-### 2. Configure Environment
-
-Create `ragtest/.env`:
+4. **Configure Environment**
+Create `.env` file:
 ```env
-GRAPHRAG_API_KEY=your_openai_api_key_here
+OPENAI_API_KEY=your-key-here
+GRAPHRAG_API_KEY=your-key-here
 ```
 
-Optional - For private repositories:
-```env
-GITHUB_TOKEN=your_github_token_here
+### Running the System
+
+**Automated (Recommended):**
+```powershell
+.\run_servers.ps1
 ```
 
-### 3. Start the Application
-
-**Terminal 1 - Backend:**
+**Manual:**
 ```bash
-uvicorn simple_rag_app.main:app --reload
-```
+# Terminal 1 - Backend
+python -m uvicorn simple_rag_app.main:app --host 0.0.0.0 --port 8000
 
-**Terminal 2 - Frontend:**
-```bash
+# Terminal 2 - Frontend
 cd simple_rag_app/frontend
 npm run dev
 ```
 
-### 4. Access the Application
-
-- Frontend: `http://localhost:5173`
-- Backend API: `http://127.0.0.1:8000`
-- API Docs: `http://127.0.0.1:8000/docs`
+Access at: **http://localhost:5173**
 
 ## 📖 Usage
 
-1. **Ingest a Repository**: Enter a GitHub URL (e.g., `https://github.com/user/repo`)
-2. **Wait for Processing**: The system will download, chunk, and analyze the code
-3. **Explore the Graph**: View entities and relationships visually
-4. **Ask Questions**: Use natural language to query your codebase
+### 1. Ingest a Repository
+- Enter GitHub URL: `https://github.com/username/repo`
+- Click "Ingest & Index"
+- Wait for completion (may take several minutes)
 
-## 🔧 Configuration
+### 2. Query the Codebase
+**Example Queries:**
+- "How does the authentication system work?"
+- "Explain the main architecture"
+- "What are the key components?"
+- "Debug the login flow"
 
-### Entity Types
-Configured in [`ragtest/settings.yaml`](ragtest/settings.yaml#L82):
-```yaml
-entity_types: [class, function, module, variable, file, api_endpoint]
-```
+### 3. View Knowledge Graph
+Switch to Graph tab to visualize code relationships.
 
-### Chunking Strategy
-```yaml
-chunks:
-  size: 1200        # Characters per chunk
-  overlap: 100      # Overlap between chunks
-```
-
-### Concurrent Processing
-```yaml
-concurrent_requests: 25  # Process up to 25 chunks in parallel
-```
-
-## 📚 Documentation
-
-Detailed documentation available in the [`docs/`](docs/) folder:
-
-- **[Simple Flow Guide](docs/simple_flow_guide.md)** - Easy visual walkthrough
-- **[Technical Walkthrough](docs/walkthrough.md)** - Comprehensive technical details
-- **[Implementation Plan](docs/implementation_plan.md)** - Development roadmap
-
-## 🛠️ Key Components
+## 🔧 System Components
 
 ### Backend (`simple_rag_app/`)
-- **`main.py`**: FastAPI server with ingestion and query endpoints
-- **`utils.py`**: Repository cloning and file processing utilities
+- **main.py**: FastAPI server with LangGraph integration
+- **utils.py**: Repository cloning and file processing
+
+### Agentic System (`agentic_copilot/`)
+
+#### Graphs
+- **main_graph.py**: Orchestrates all agents
+- **intent_subgraph.py**: Classifies user intent
+- **graphrag_subgraph.py**: Queries code knowledge graph
+- **rag_subgraph.py**: Document retrieval (mocked)
+- **tool_subgraph.py**: Tool execution (mocked)
+- **risk_subgraph.py**: Risk analysis (mocked)
+
+#### Agents
+- **reasoning_agent.py**: GPT-4 synthesis of all agent outputs
+
+#### Schemas
+- **state.py**: Global state management with reducers
+
+#### Reducers
+- **reducers.py**: State merging strategies
 
 ### Frontend (`simple_rag_app/frontend/`)
-- **`GraphView.jsx`**: Interactive graph visualization using `react-force-graph-2d`
+- **App.jsx**: Main UI with markdown rendering
+- **GraphView.jsx**: Interactive graph visualization
 
-### GraphRAG Configuration (`ragtest/`)
-- **`settings.yaml`**: Main configuration file
-- **`prompts/`**: Custom prompts for entity extraction and querying
-- **`output/`**: Generated graph data (entities.parquet, relationships.parquet)
+## 🎨 Key Features
 
-## 🔍 How It Works
+### Multi-Agent Parallelism
+Agents run simultaneously using LangGraph's parallel execution:
+```python
+workflow.add_edge("intent_analyzer", "rag_agent")
+workflow.add_edge("intent_analyzer", "graphrag_agent")
+workflow.add_edge("intent_analyzer", "tool_agent")
+workflow.add_edge("intent_analyzer", "risk_agent")
+```
 
-1. **Ingestion**: Code files are downloaded and preprocessed with metadata headers
-2. **Chunking**: Files are split into 1200-character chunks with 100-character overlap
-3. **Parallel Processing**: Up to 25 chunks processed simultaneously by AI
-4. **Entity Extraction**: AI identifies code entities (classes, functions, etc.)
-5. **Relationship Mapping**: AI determines connections (imports, calls, defines)
-6. **Graph Storage**: Results saved in Parquet format for efficient querying
-7. **Visualization**: Frontend renders interactive graph from backend API
+### State Management
+LangGraph reducers handle concurrent updates:
+```python
+class GlobalState(TypedDict):
+    user_query: Annotated[str, _keep_first]  # Immutable
+    rag_context: Annotated[List[str], operator.add]  # Accumulates
+    graphrag_context: Annotated[List[str], operator.add]
+```
 
-## 🎨 Custom Prompts
+### GPT-4 Synthesis
+Clean, formatted responses:
+```python
+llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
+response = llm.synthesize(query, intent, context)
+```
 
-The system uses custom prompts optimized for code analysis:
+### Markdown Rendering
+Rich text display in React:
+```jsx
+<ReactMarkdown remarkPlugins={[remarkGfm]}>
+  {response}
+</ReactMarkdown>
+```
 
-- **Extract Graph**: Identifies code entities with safe naming conventions
-- **Global Search Map**: Analyzes code structure and patterns
-- **Global Search Reduce**: Synthesizes technical reports
+## 📊 Advantages Over Previous Implementation
+
+| Feature | Old | New |
+|---------|-----|-----|
+| **Execution** | Sequential | Parallel (3-5x faster) |
+| **Response Quality** | Raw dumps | GPT-4 formatted |
+| **Error Handling** | Raw tracebacks | Filtered, graceful |
+| **Extensibility** | Hard-coded | Modular agents |
+| **State Management** | None | LangGraph reducers |
+| **UI** | Plain text | Markdown rendering |
+
+## 🛠️ Development
+
+### Adding a New Agent
+
+1. Create subgraph in `agentic_copilot/graphs/`:
+```python
+def my_agent(state: GlobalState):
+    # Your logic here
+    return {"my_context": [result]}
+
+def create_my_subgraph():
+    workflow = StateGraph(GlobalState)
+    workflow.add_node("my_agent", my_agent)
+    workflow.set_entry_point("my_agent")
+    workflow.add_edge("my_agent", END)
+    return workflow.compile()
+```
+
+2. Add to main graph:
+```python
+from .my_subgraph import create_my_subgraph
+
+workflow.add_node("my_agent", create_my_subgraph())
+workflow.add_edge("intent_analyzer", "my_agent")
+workflow.add_edge("my_agent", "final_reasoner")
+```
+
+3. Update state schema:
+```python
+class GlobalState(TypedDict):
+    # ... existing fields
+    my_context: Annotated[List[str], operator.add]
+```
 
 ## 🐛 Troubleshooting
 
-### Issue: 500 Error on Ingestion
-**Solution**: Check `ragtest/logs/indexing-engine.log` for detailed errors
+**Backend won't start:**
+- Check `.env` has valid `OPENAI_API_KEY`
+- Run: `pip install -r requirements.txt`
 
-### Issue: Graph shows no connections
-**Solution**: Verify `entities.parquet` and `relationships.parquet` exist in `ragtest/output/`
+**Frontend errors:**
+- Run: `npm install` in `simple_rag_app/frontend`
+- Clear browser cache
 
-### Issue: Private repository access denied
-**Solution**: Set `GITHUB_TOKEN` in your environment or `.env` file
+**GraphRAG errors:**
+- Ensure repository ingested first
+- Check `ragtest/output` exists
 
-## 📊 Data Storage
+**Empty responses:**
+- Verify ingestion completed
+- Check backend logs for errors
 
-- **Entities**: `ragtest/output/entities.parquet` (nodes)
-- **Relationships**: `ragtest/output/relationships.parquet` (edges)
-- **Format**: Apache Parquet (columnar, compressed)
+## 📝 API Endpoints
+
+### POST `/api/ingest`
+Ingest a GitHub repository
+```json
+{
+  "repo_url": "https://github.com/username/repo"
+}
+```
+
+### POST `/api/query`
+Query the codebase
+```json
+{
+  "query": "How does authentication work?"
+}
+```
+
+### GET `/api/graph`
+Get knowledge graph visualization data
+
+### POST `/api/reset`
+Clear all ingested data
+
+## 🔐 Security Notes
+
+- API keys stored in `.env` (gitignored)
+- CORS enabled for development (restrict in production)
+- No authentication (add for production use)
+
+## 📚 Dependencies
+
+### Python
+- fastapi
+- uvicorn
+- langchain-openai
+- langgraph
+- graphrag
+- pandas
+- python-dotenv
+
+### Node.js
+- react
+- vite
+- lucide-react
+- react-markdown
+- remark-gfm
+- react-force-graph-2d
+
+## 🎯 Future Enhancements
+
+- [ ] Streaming responses
+- [ ] Conversation memory
+- [ ] More specialized agents (security, performance)
+- [ ] Cloud deployment
+- [ ] Authentication & multi-user support
+- [ ] Real-time collaboration
+
+## 📄 License
+
+[Your License Here]
 
 ## 🤝 Contributing
 
-Contributions welcome! Please ensure:
-- Code follows existing patterns
-- Documentation is updated
-- Tests pass (if applicable)
+Contributions welcome! Please follow the existing code structure and add tests for new features.
 
-## 📝 License
+## 📞 Support
 
-[Add your license here]
-
-## 🙏 Acknowledgments
-
-- Built with [Microsoft GraphRAG](https://github.com/microsoft/graphrag)
-- Visualization powered by [react-force-graph](https://github.com/vasturiano/react-force-graph)
+For issues and questions, please check the troubleshooting section or create an issue in the repository.
 
 ---
 
-**Made with ❤️ for better codebase understanding**
+**Built with ❤️ using LangGraph, FastAPI, and React**

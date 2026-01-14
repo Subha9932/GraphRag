@@ -9,15 +9,18 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "lucide-react": "^0.344.0",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "react-force-graph-2d": "^1.29.0"
+        "lodash-es": "^4.17.22",
+        "lucide-react": "^0.562.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "react-force-graph-2d": "^1.29.0",
+        "react-markdown": "^10.1.0",
+        "remark-gfm": "^4.0.1"
     },
     "devDependencies": {
         "@types/react": "^18.2.64",
         "@types/react-dom": "^18.2.21",
         "@vitejs/plugin-react": "^4.2.1",
-        "vite": "^5.1.6"
+        "vite": "^5.4.21"
     }
 }

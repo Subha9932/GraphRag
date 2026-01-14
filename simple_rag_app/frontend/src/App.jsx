@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Github, Loader2, MessageSquare, Share2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import GraphView from './GraphView';
 
 function App() {
     const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'graph'
 
     // Ingestion State
+    const [ingestMode, setIngestMode] = useState('github'); // 'github' or 'folder'
     const [repoUrl, setRepoUrl] = useState('');
+    const [selectedFiles, setSelectedFiles] = useState(null);
     const [ingestStatus, setIngestStatus] = useState({ message: '', type: '' });
     const [isIngesting, setIsIngesting] = useState(false);
 
@@ -29,21 +33,52 @@ function App() {
         }
     }, [messages, isThinking, activeTab]);
 
-    const handleIngest = async () => {
-        if (!repoUrl.trim()) {
-            setIngestStatus({ message: 'Please enter a GitHub URL.', type: 'error' });
-            return;
-        }
+    const handleFileChange = (e) => {
+        setSelectedFiles(e.target.files);
+    };
 
+    const handleIngest = async () => {
         setIsIngesting(true);
-        setIngestStatus({ message: 'Cloning and Indexing... This may take several minutes.', type: 'info' });
+        setIngestStatus({ message: 'Processing and Indexing... This may take several minutes.', type: 'info' });
 
         try {
-            const response = await fetch('http://localhost:8000/api/ingest', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ repo_url: repoUrl })
-            });
+            let response;
+
+            if (ingestMode === 'github') {
+                if (!repoUrl.trim()) {
+                    setIngestStatus({ message: 'Please enter a GitHub URL.', type: 'error' });
+                    setIsIngesting(false);
+                    return;
+                }
+
+                response = await fetch('http://localhost:8000/api/ingest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ repo_url: repoUrl })
+                });
+
+            } else {
+                // Folder Upload Mode
+                if (!selectedFiles || selectedFiles.length === 0) {
+                    setIngestStatus({ message: 'Please select a folder to upload.', type: 'error' });
+                    setIsIngesting(false);
+                    return;
+                }
+
+                const formData = new FormData();
+                // Append all files
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    // Skip node_modules or .git if possible (client side check)
+                    if (file.webkitRelativePath.includes("node_modules") || file.webkitRelativePath.includes(".git")) continue;
+                    formData.append('files', file);
+                }
+
+                response = await fetch('http://localhost:8000/api/ingest/upload', {
+                    method: 'POST',
+                    body: formData // No Content-Type header needed, fetch sets it for FormData
+                });
+            }
 
             const data = await response.json();
 
@@ -73,6 +108,7 @@ function App() {
                 setIngestStatus({ message: 'All data cleared.', type: 'success' });
                 setMessages([{ id: 1, text: 'Data cleared. Ready to ingest a new repository.', sender: 'bot' }]);
                 setRepoUrl('');
+                setLocalPath('');
             } else {
                 setIngestStatus({ message: 'Failed to clear data.', type: 'error' });
             }
@@ -130,24 +166,70 @@ function App() {
             <div className="container">
                 <header>
                     <h1>GraphRAG <span className="highlight">Explorer</span></h1>
-                    <p>Ingest GitHub repositories & chat with the knowledge graph.</p>
+                    <p>Ingest repositories & chat with the knowledge graph.</p>
                 </header>
 
                 <main>
                     {/* Ingestion Section */}
                     <section className="glass-panel">
-                        <h2>1. Ingest Repository</h2>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h2>1. Ingest Data</h2>
+                            <div className="mode-toggle">
+                                <button
+                                    className={ingestMode === 'github' ? 'active' : ''}
+                                    onClick={() => setIngestMode('github')}
+                                    style={{
+                                        marginRight: '0.5rem',
+                                        padding: '0.25rem 0.5rem',
+                                        background: ingestMode === 'github' ? '#3b82f6' : '#e2e8f0',
+                                        color: ingestMode === 'github' ? 'white' : 'black',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    GitHub URL
+                                </button>
+                                <button
+                                    className={ingestMode === 'folder' ? 'active' : ''}
+                                    onClick={() => setIngestMode('folder')}
+                                    style={{
+                                        padding: '0.25rem 0.5rem',
+                                        background: ingestMode === 'folder' ? '#3b82f6' : '#e2e8f0',
+                                        color: ingestMode === 'folder' ? 'white' : 'black',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Folder Upload
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="input-group">
-                            <input
-                                type="text"
-                                placeholder="https://github.com/username/repo"
-                                value={repoUrl}
-                                onChange={(e) => setRepoUrl(e.target.value)}
-                                disabled={isIngesting}
-                            />
+                            {ingestMode === 'github' ? (
+                                <input
+                                    type="text"
+                                    placeholder="https://github.com/username/repo"
+                                    value={repoUrl}
+                                    onChange={(e) => setRepoUrl(e.target.value)}
+                                    disabled={isIngesting}
+                                />
+                            ) : (
+                                <input
+                                    type="file"
+                                    webkitdirectory=""
+                                    directory=""
+                                    multiple
+                                    onChange={handleFileChange}
+                                    disabled={isIngesting}
+                                    style={{ padding: '0.5rem' }}
+                                />
+                            )}
                             <button onClick={handleIngest} disabled={isIngesting}>
-                                {isIngesting ? <Loader2 className="animate-spin" /> : <Github size={20} />}
-                                {isIngesting ? '' : 'Ingest & Index'}
+                                {isIngesting ? <Loader2 className="animate-spin" /> : (ingestMode === 'github' ? <Github size={20} /> : <Share2 size={20} />)}
+                                {isIngesting ? '' : (ingestMode === 'github' ? 'Clone & Index' : 'Upload & Index')}
                             </button>
                         </div>
 
@@ -201,7 +283,7 @@ function App() {
                                         <div key={msg.id} className={`message ${msg.sender}`}>
                                             <div className="bubble">
                                                 {msg.sender === 'bot'
-                                                    ? msg.text.split('\n').map((line, i) => <div key={i}>{line || <br />}</div>)
+                                                    ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
                                                     : msg.text}
                                             </div>
                                         </div>

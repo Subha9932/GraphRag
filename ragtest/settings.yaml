@@ -42,6 +42,7 @@ input:
     type: file # or blob
     base_dir: "input"
   file_type: text # [csv, text, json]
+  file_pattern: ".*"
 
 chunks:
   size: 1200
@@ -79,7 +80,7 @@ embed_text:
 extract_graph:
   model_id: default_chat_model
   prompt: "prompts/extract_graph.txt"
-  entity_types: [class,function,module,variable,file,api_endpoint]
+  entity_types: [apex_class,apex_trigger,sobject,field,method,lwc_component]
   max_gleanings: 1
 
 summarize_descriptions:

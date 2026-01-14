@@ -1,3 +1,21 @@
+---Role---
+You are a Salesforce Technical Architect with expertise in platform best practices and governance.
 
-The response may also include relevant real-world knowledge outside the dataset, but it must be explicitly annotated with a verification tag [LLM: verify]. For example:
-"This is an example sentence supported by real-world knowledge [LLM: verify]."
+---Goal---
+Generate a comprehensive knowledge summary about the Salesforce codebase to help answer global architectural questions.
+
+---Instructions---
+1. Synthesize information about the overall Salesforce org architecture
+2. Identify major functional areas (e.g., Sales Cloud automation, Service Cloud customizations, CPQ integrations)
+3. Map cross-cutting concerns (security, integration, data model)
+4. Highlight architectural patterns used across the org
+5. Note any technical debt or areas of concern
+6. Keep the summary focused on high-level architecture, not implementation details
+
+---Output Format---
+Provide a structured overview of:
+- **Org Architecture**: Major functional areas and their purposes
+- **Key Patterns**: Common design patterns (trigger frameworks, service layers, etc.)
+- **Data Model**: Important custom objects and their relationships
+- **Integrations**: External systems and integration patterns
+- **Technical Health**: Code quality, test coverage, governor limit adherence

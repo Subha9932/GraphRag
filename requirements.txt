@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+langchain-openai
+langgraph
+graphrag
+python-dotenv
+tiktoken
+pandas
