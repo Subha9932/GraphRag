@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agentic Engineering Knowledge Copilot — Architecture Overview</title>
+    <style>
+        :root {
+            --bg: #f7f8fb;
+            --card: #ffffff;
+            --text: #111827;
+            --muted: #4b5563;
+            --muted2: #6b7280;
+            --border: #e5e7eb;
+            --accent: #7c3aed;
+            /* Purple for Knowledge/Graph */
+            --accent2: #2563eb;
+            /* Blue for Logic/Agents */
+            --accent3: #059669;
+            /* Green for Action/Services */
+            --code: #0b1220;
+            --radius: 14px;
+            --shadow: 0 10px 24px rgba(17, 24, 39, .07);
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--sans);
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.6;
+        }
+
+        .wrap {
+            width: min(1020px, 92vw);
+            margin: 0 auto;
+            padding: 34px 0 56px;
+        }
+
+        header {
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--muted2);
+            letter-spacing: .2px;
+        }
+
+        .kicker .bar {
+            width: 36px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 999px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(26px, 3vw, 38px);
+            line-height: 1.15;
+            letter-spacing: -0.4px;
+        }
+
+        .sub {
+            margin: 0;
+            max-width: 78ch;
+            color: var(--muted);
+            font-size: clamp(14px, 1.55vw, 17px);
+        }
+
+        /* 2-Column Grid for the Top Section Only */
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1.1fr .9fr;
+            gap: 14px;
+            align-items: start;
+            margin-bottom: 14px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .card .hd {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .card .hd h2 {
+            margin: 0;
+            font-size: 15px;
+            letter-spacing: .2px;
+            font-weight: 700;
+        }
+
+        .card .bd {
+            padding: 14px 16px 16px;
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .chip {
+            font-size: 12px;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            background: #fafafa;
+            padding: 6px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .lead {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .callout {
+            border-left: 4px solid var(--accent);
+            background: #f4f7ff;
+            border-radius: 12px;
+            padding: 12px 12px;
+            color: var(--text);
+        }
+
+        .callout strong {
+            font-weight: 800;
+        }
+
+        .callout p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .section {
+            margin-top: 14px;
+        }
+
+        .bullets {
+            margin: 8px 0 0 18px;
+            padding: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .bullets li {
+            margin: 6px 0;
+        }
+
+        pre {
+            margin: 10px 0 0;
+            background: var(--code);
+            color: rgba(255, 255, 255, .92);
+            border-radius: 12px;
+            padding: 12px 12px;
+            overflow: auto;
+            font-family: var(--mono);
+            font-size: 12.6px;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: var(--mono);
+            word-break: break-word;
+        }
+
+        .prims {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .prim {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 12px;
+            background: #ffffff;
+        }
+
+        .prim .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .2px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #fafafa;
+            margin-bottom: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .prim.observe .dot {
+            background: var(--accent2);
+            /* Blue */
+        }
+
+        .prim.reflect .dot {
+            background: var(--accent);
+            /* Purple */
+        }
+
+        .prim.act .dot {
+            background: var(--accent3);
+            /* Green */
+        }
+
+        .prim h4 {
+            margin: 0 0 6px;
+            font-size: 15px;
+            letter-spacing: -0.2px;
+        }
+
+        .prim p {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .prim ul {
+            margin: 0 0 0 18px;
+            padding: 0;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .prim li {
+            margin: 6px 0;
+        }
+
+        .miniGrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .kv:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .kv .k {
+            font-weight: 800;
+            color: var(--text);
+            font-size: 13.5px;
+        }
+
+        .kv .v {
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        details {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: #fff;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        footer {
+            margin-top: 16px;
+            color: var(--muted2);
+            font-size: 12.5px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .diagramWrap {
+            padding: 10px 12px 14px;
+        }
+
+        .diagramNote {
+            padding: 0 16px 14px;
+            color: var(--muted2);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 900px) {
+            .grid2 {
+                grid-template-columns: 1fr;
+            }
+
+            .prims {
+                grid-template-columns: 1fr;
+            }
+
+            .miniGrid {
+                grid-template-columns: 1fr;
+            }
+
+            .chips {
+                justify-content: flex-start;
+            }
+
+            .kv {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <div class="kicker"><span class="bar"></span><span>Intelligent Code Analysis • Standard GraphRAG • Prompt
+                    Optimized</span></div>
+            <h1>Agentic Engineering Knowledge Copilot (AEKC)</h1>
+            <p class="sub">
+                A **Multi-Agent System** that transforms how developers interact with their codebase. It combines
+                **Microsoft GraphRAG** for deep knowledge retrieval, **LangGraph** for parallel orchestration, and
+                **Prompt Engineering** for optimized code understanding.
+            </p>
+        </header>
+
+        <!-- TOP SECTION: 2-Column Grid -->
+        <section class="grid2">
+            <!-- Diagram -->
+            <div class="card">
+                <div class="hd">
+                    <h2>Architecture Flow (AEKC)</h2>
+                    <div class="chips">
+                        <span class="chip">Stack: LangGraph + React</span>
+                        <span class="chip">Core: MS GraphRAG</span>
+                        <span class="chip">Store: Parquet/LanceDB</span>
+                    </div>
+                </div>
+
+                <div class="diagramWrap">
+                    <svg viewBox="0 0 980 280" width="100%" height="auto" role="img"
+                        aria-label="AEKC Architecture Diagram">
+                        <defs>
+                            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8"
+                                orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#111827"></path>
+                            </marker>
+                        </defs>
+
+                        <g>
+                            <!-- User UI -->
+                            <rect x="50" y="70" width="160" height="86" rx="14" fill="#f4f7ff" stroke="#c7d2fe" />
+                            <text x="130" y="105" text-anchor="middle" fill="#111827" font-size="18"
+                                font-weight="700">React UI</text>
+                            <text x="130" y="130" text-anchor="middle" fill="#6b7280" font-size="13">Markdown
+                                Render</text>
+
+                            <!-- API Server -->
+                            <rect x="300" y="70" width="160" height="86" rx="14" fill="#f9fafb" stroke="#e5e7eb" />
+                            <text x="380" y="105" text-anchor="middle" fill="#111827" font-size="18"
+                                font-weight="700">FastAPI</text>
+                            <text x="380" y="130" text-anchor="middle" fill="#6b7280" font-size="13">Backend
+                                Service</text>
+
+                            <!-- LangGraph -->
+                            <rect x="550" y="50" width="380" height="180" rx="14" fill="#f9fafb" stroke="#7c3aed"
+                                stroke-dasharray="4" />
+                            <text x="740" y="75" text-anchor="middle" fill="#7c3aed" font-size="14"
+                                font-weight="800">LangGraph Orchestrator</text>
+
+                            <!-- Agents inside LangGraph -->
+                            <rect x="570" y="90" width="100" height="60" rx="8" fill="#ffffff" stroke="#e5e7eb" />
+                            <text x="620" y="115" text-anchor="middle" fill="#111827" font-size="12"
+                                font-weight="700">Intent</text>
+                            <text x="620" y="130" text-anchor="middle" fill="#6b7280" font-size="10">Classifier</text>
+
+                            <rect x="690" y="90" width="100" height="60" rx="8" fill="#ffffff" stroke="#e5e7eb" />
+                            <text x="740" y="115" text-anchor="middle" fill="#111827" font-size="12"
+                                font-weight="700">GraphRAG</text>
+                            <text x="740" y="130" text-anchor="middle" fill="#6b7280" font-size="10">Standard CLI</text>
+
+                            <rect x="810" y="90" width="100" height="60" rx="8" fill="#ffffff" stroke="#e5e7eb" />
+                            <text x="860" y="115" text-anchor="middle" fill="#111827" font-size="12"
+                                font-weight="700">Synthesis</text>
+                            <text x="860" y="130" text-anchor="middle" fill="#6b7280" font-size="10">GPT-4</text>
+
+                            <!-- Parallel Flow lines inside LG -->
+                            <path d="M 670 120 L 690 120" stroke="#7c3aed" stroke-width="1.5" />
+                            <path d="M 790 120 L 810 120" stroke="#7c3aed" stroke-width="1.5" />
+
+                        </g>
+
+                        <!-- Arrows connecting main blocks -->
+                        <path d="M 210 113 L 300 113" stroke="#111827" stroke-width="2" marker-end="url(#arrow)" />
+                        <path d="M 460 113 L 550 113" stroke="#111827" stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Bottom Services Layer -->
+                        <rect x="280" y="210" width="200" height="40" rx="999" fill="#f9fafb" stroke="#e5e7eb" />
+                        <text x="380" y="235" text-anchor="middle" fill="#059669" font-size="13"
+                            font-weight="800">Knowledge Store (Parquet)</text>
+
+                        <line x1="740" y1="150" x2="740" y2="190" stroke="#e5e7eb" stroke-width="2" />
+                        <path d="M 740 190 L 480 230" stroke="#e5e7eb" stroke-width="2" stroke-dasharray="4" />
+
+                    </svg>
+                </div>
+
+                <div class="diagramNote">
+                    Mental model: **User** asks, **LangGraph** plans & distributes to **MS standard approach**,
+                    **GraphRAG CLI** retrieves context, **GPT-4** synthesizes.
+                </div>
+            </div>
+
+            <!-- Quick scan -->
+            <div class="card">
+                <div class="hd">
+                    <h2>Quick scan</h2>
+                    <div class="chips">
+                        <span class="chip">Intent = SEE</span>
+                        <span class="chip">Graph = KNOW</span>
+                        <span class="chip">Synth = SPEAK</span>
+                    </div>
+                </div>
+                <div class="bd">
+                    <div class="callout">
+                        <strong>One-line summary</strong>
+                        <p>A smart engineering assistant that uses standard Microsoft GraphRAG with specialized prompt
+                            engineering to understand code relationships without complex external databases.</p>
+                    </div>
+
+                    <div class="section" style="margin-top:12px;">
+                        <div class="kv">
+                            <div class="k">Input</div>
+                            <div class="v">Natural Language Query (e.g., "How does auth work?").</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Orchestration</div>
+                            <div class="v">LangGraph runs multiple agents in parallel (Intent, Risk, Tools).</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Intelligence</div>
+                            <div class="v">Prompt-optimized GraphRAG provides deep context; GPT-4 synthesizes.</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Output</div>
+                            <div class="v">Formatted Markdown with code snippets and diagrams.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- MAIN CONTENT: Full Width Sections -->
+
+        <!-- High-level workflow (Text) -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>High-level workflow (text)</h2>
+                    <div class="chips">
+                        <span class="chip">Pipeline</span>
+                    </div>
+                </div>
+                <div class="bd">
+                    <pre><code>User Query
+  │
+  ▼
+API Endpoint (/api/query)
+  │
+  ▼
+LangGraph Orchestrator (State Management)
+  ├─ 1. Intent Analysis Agent (Router)
+  │
+  ├─ 2. Parallel Execution:
+  │    ├─ GraphRAG Agent (Standard CLI w/ Local Search)
+  │    ├─ Tool Agent (Direct Parquet Lookups)
+  │    └─ Risk Agent (Security/Performance Checks)
+  │
+  ├─ 3. Context Merging (Reducers)
+  │
+  └─ 4. GPT-4 Synthesis (Final Answer Generation)
+       └─ Formatted Markdown Response</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Core Primitives -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>Core Primitives</h2>
+                    <div class="chips">
+                        <span class="chip">Modular design</span>
+                    </div>
+                </div>
+                <div class="bd">
+                    <p class="lead">The system is built on three specialized pillars that enable it to act as a senior
+                        engineer.</p>
+
+                    <div class="prims"> <!-- 3-Column internal grid -->
+                        <div class="prim observe">
+                            <div class="tag"><span class="dot"></span>Intent — SEE</div>
+                            <h4>Enables the AI to <span style="color:var(--accent2); font-weight:900;">UNDERSTAND</span>
+                            </h4>
+                            <p>Classifies the user's request to determine the best strategy.</p>
+                            <ul>
+                                <li><strong>Router</strong>: Decides which agents to activate.</li>
+                                <li><strong>Ambiguity Detection</strong>: Asks clarifying questions.</li>
+                                <li><strong>Context Aware</strong>: Remembers conversation history.</li>
+                            </ul>
+                        </div>
+
+                        <div class="prim reflect">
+                            <div class="tag"><span class="dot"></span>GraphRAG — THINK</div>
+                            <h4>Enables the AI to <span style="color:var(--accent); font-weight:900;">KNOW</span></h4>
+                            <p>Retrieves deep, connected knowledge from the codebase.</p>
+                            <ul>
+                                <li><strong>Prompt Engineering</strong>: Custom prompts (<code>extract_graph.txt</code>)
+                                    specifically tuned for identifying code entities.</li>
+                                <li><strong>Standard CLI</strong>: Uses Microsoft's robust GraphRAG implementation.</li>
+                                <li><strong>Hybrid Search</strong>: Combines vector search with graph traversal.</li>
+                            </ul>
+                        </div>
+
+                        <div class="prim act">
+                            <div class="tag"><span class="dot"></span>Orchestrator — ACT</div>
+                            <h4>Enables the AI to <span style="color:var(--accent3); font-weight:900;">COORDINATE</span>
+                            </h4>
+                            <p>Manages flow, state, and final output generation.</p>
+                            <ul>
+                                <li><strong>Parallelism</strong>: Runs agents concurrently.</li>
+                                <li><strong>State Reducers</strong>: Merges data from multiple sources.</li>
+                                <li><strong>Synthesis</strong>: Compiles disjoint facts into a narrative.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Enterprise Capabilities -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>Enterprise Capabilities</h2>
+                    <div class="chips">
+                        <span class="chip">Performance</span>
+                        <span class="chip">Reliability</span>
+                        <span class="chip">UX</span>
+                    </div>
+                </div>
+                <div class="bd">
+                    <div class="miniGrid">
+                        <div class="prim integrate">
+                            <div class="tag"><span class="dot"></span>Performance</div>
+                            <h4>Parallel Execution</h4>
+                            <p>Drastically reduces latency by running independent tasks simultaneously.</p>
+                            <ul class="bullets">
+                                <li><strong>LangGraph Async:</strong> Utilizing <code>asyncio</code> to fire multiple
+                                    agent requests at once.</li>
+                                <li><strong>3-5x Speedup:</strong> Compared to sequential chain-of-thought execution.
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="prim integrate">
+                            <div class="tag"><span class="dot"></span>Reliability</div>
+                            <h4>Robust State Management</h4>
+                            <p>Ensures data consistency across complex, multi-step workflows.</p>
+                            <ul class="bullets">
+                                <li><strong>Parquet Storage:</strong> Reliable, file-based persistence using standard
+                                    formats.</li>
+                                <li><strong>Immutable State:</strong> Keeps a clean record of the query lifecycle.</li>
+                            </ul>
+                        </div>
+
+                        <div class="prim integrate">
+                            <div class="tag"><span class="dot"></span>User Experience</div>
+                            <h4>Rich Visualization</h4>
+                            <p>More than just text—a fully interactive experience.</p>
+                            <ul class="bullets">
+                                <li><strong>React + Markdown:</strong> Renders tables, code blocks, and headers
+                                    beautifully.</li>
+                                <li><strong>Interactive Graph:</strong> Visualizes the actual code nodes and
+                                    relationships.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Micro-Level Details -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>Micro-Level Details</h2>
+                    <div class="chips"><span class="chip">Components</span></div>
+                </div>
+                <div class="bd">
+                    <ul class="bullets">
+                        <li><strong>FastAPI Backend:</strong> Serves as the robust API layer handling requests and
+                            stream responses.</li>
+                        <li><strong>Standard GraphRAG:</strong> Uses the official Microsoft `graphrag` package and CLI
+                            for indexing and retrieval.</li>
+                        <li><strong>Prompt Optimization:</strong> Custom `prompts/extract_graph.txt` ensures the
+                            knowledge graph accurately captures classes, methods, and their relationships.</li>
+                        <li><strong>Direct Parquet Access:</strong> Hybrid agent reads `entities.parquet` directly for
+                            fast lookups of exact matches.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trust boundary -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>Trust, Reliability, & Compliance</h2>
+                    <div class="chips"><span class="chip">Production Grade</span></div>
+                </div>
+                <div class="bd">
+                    <ul class="bullets">
+                        <li><strong>Safe Execution:</strong> Read-only access to the codebase ensures no accidental
+                            modifications.</li>
+                        <li><strong>Data Privacy:</strong> Code is indexed locally/privately; only embeddings and
+                            metadata are processed.</li>
+                        <li><strong>Hallucination Reduction:</strong> GraphRAG anchors the AI's response to actual code
+                            entities found in the local Parquet files.</li>
+                    </ul>
+
+                    <div style="margin-top:10px;" class="callout">
+                        <strong>Reasoning Logic Implementation</strong>
+                        <pre style="margin-top:8px;"><code>If Context is Missing:
+   Action = Ask Clarifying Question
+   Confidence = Low
+
+If Context is Rich:
+   Action = Synthesize Answer
+   Source = Cite File Reference (e.g., `src/auth.ts`)
+   Confidence = High</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <span>Generated for Agentic Engineering Knowledge Copilot</span>
+            <span>Confidential & Proprietary</span>
+        </footer>
+    </div>
+</body>
+
+</html>
