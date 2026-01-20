@@ -39,11 +39,15 @@ def analyze_intent(state: GlobalState):
         ("user", "{query}")
     ])
     
-    chain = prompt | llm
-    result = chain.invoke({"query": query})
-    intent = result.content.strip().lower()
-    
-    print(f"✅ Intent Classified: '{intent}'")
+    try:
+        chain = prompt | llm
+        result = chain.invoke({"query": query})
+        intent = result.content.strip().lower()
+        print(f"✅ Intent Classified: '{intent}'")
+    except Exception as e:
+        print(f"⚠️  Intent Classification Failed (likely API Quota/Error): {e}")
+        print(f"🔄 Defaulting to 'general' intent")
+        intent = "general"
     print("="*80 + "\n")
     
     return {"intent": intent}

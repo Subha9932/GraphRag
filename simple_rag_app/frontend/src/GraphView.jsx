@@ -43,26 +43,26 @@ const GraphView = () => {
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px', color: '#000000' }}>
-                <Loader2 className="animate-spin" size={40} color="#a855f7" />
-                <span style={{ marginLeft: '10px', color: '#000000', fontWeight: 'bold' }}>Loading Knowledge Graph...</span>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px', color: '#94a3b8' }}>
+                <Loader2 className="animate-spin" size={40} color="#3b82f6" />
+                <span style={{ marginLeft: '10px', color: '#e2e8f0', fontWeight: '500' }}>Loading Knowledge Graph...</span>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div style={{ color: '#dc2626', textAlign: 'center', padding: '2rem' }}>
+            <div style={{ color: '#ef4444', textAlign: 'center', padding: '2rem' }}>
                 <h3>Error Loading Graph</h3>
                 <p>{error}</p>
-                <button onClick={fetchGraphData} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>Retry</button>
+                <button onClick={fetchGraphData} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#334155', border: 'none', color: 'white', borderRadius: '4px' }}>Retry</button>
             </div>
         );
     }
 
     return (
-        <div style={{ height: '700px', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#ffffff', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 10, color: '#000000', fontSize: '0.9rem', fontWeight: 'bold', pointerEvents: 'none', textShadow: '0 0 2px white' }}>
+        <div style={{ height: '700px', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '12px', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 15, left: 15, zIndex: 10, color: '#94a3b8', fontSize: '0.85rem', fontWeight: '500', pointerEvents: 'none', background: 'rgba(0,0,0,0.5)', padding: '4px 8px', borderRadius: '4px' }}>
                 Scroll to zoom • Drag to pan • Click node to focus
             </div>
             <ForceGraph2D
@@ -70,46 +70,43 @@ const GraphView = () => {
                 graphData={data}
                 nodeLabel="description"
                 nodeAutoColorBy="type"
+                backgroundColor="rgba(0,0,0,0)" // Transparent to let container bg show
 
-                // STANDARD LINK STYLES (No custom canvas object)
-                linkWidth={2}
-                linkColor={() => '#000000'} // Force black
+                // STANDARD LINK STYLES
+                linkWidth={1.5}
+                linkColor={() => '#475569'}
                 linkDirectionalArrowLength={3.5}
                 linkDirectionalArrowRelPos={1}
 
                 // Custom Node Rendering
                 nodeCanvasObject={(node, ctx, globalScale) => {
                     const label = node.name;
-                    const fontSize = 14 / globalScale;
+                    const fontSize = 12 / globalScale;
 
                     // Outer Glow
                     ctx.beginPath();
-                    ctx.fillStyle = node.color || '#a855f7';
-                    ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
-                    ctx.shadowBlur = 10;
+                    ctx.fillStyle = node.color || '#3b82f6';
+                    ctx.arc(node.x, node.y, 6, 0, 2 * Math.PI, false);
+                    ctx.shadowBlur = 15;
                     ctx.shadowColor = node.color;
                     ctx.fill();
                     ctx.shadowBlur = 0; // Reset
 
                     // Node body
                     ctx.beginPath();
-                    ctx.fillStyle = node.color || '#a855f7';
-                    ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
+                    ctx.fillStyle = node.color || '#3b82f6';
+                    ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI, false);
                     ctx.fill();
 
-                    // Border (Black)
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 1 / globalScale;
-                    ctx.stroke();
-
-                    // Text Label
-                    ctx.font = `bold ${fontSize}px Sans-Serif`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillStyle = '#000000';
-                    ctx.fillText(label, node.x, node.y + 10);
+                    // Text Label (Always visible for main nodes, or on zoom)
+                    if (globalScale > 1.2) {
+                        ctx.font = `${fontSize}px Inter, Sans-Serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#e2e8f0'; // Light text
+                        ctx.fillText(label, node.x, node.y + 10);
+                    }
                 }}
-                nodeCanvasObjectMode={() => 'replace'}
             />
         </div>
     );

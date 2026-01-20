@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Enterprise AI Microservice — Architecture Overview</title>
+    <style>
+        :root {
+            --bg: #f7f8fb;
+            --card: #ffffff;
+            --text: #111827;
+            --muted: #4b5563;
+            --muted2: #6b7280;
+            --border: #e5e7eb;
+            --accent: #2563eb;
+            /* blue */
+            --accent2: #059669;
+            /* green */
+            --accent3: #7c3aed;
+            /* purple */
+            --code: #0b1220;
+            --radius: 14px;
+            --shadow: 0 10px 24px rgba(17, 24, 39, .07);
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--sans);
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.6;
+        }
+
+        .wrap {
+            width: min(1020px, 92vw);
+            margin: 0 auto;
+            padding: 34px 0 56px;
+        }
+
+        header {
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--muted2);
+            letter-spacing: .2px;
+        }
+
+        .kicker .bar {
+            width: 36px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 999px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(26px, 3vw, 38px);
+            line-height: 1.15;
+            letter-spacing: -0.4px;
+        }
+
+        .sub {
+            margin: 0;
+            max-width: 78ch;
+            color: var(--muted);
+            font-size: clamp(14px, 1.55vw, 17px);
+        }
+
+        /* 2-Column Grid for the Top Section Only */
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1.1fr .9fr;
+            gap: 14px;
+            align-items: start;
+            margin-bottom: 14px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            width: 100%;
+            /* Ensures full width when not in grid */
+        }
+
+        .card .hd {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .card .hd h2 {
+            margin: 0;
+            font-size: 15px;
+            letter-spacing: .2px;
+            font-weight: 700;
+        }
+
+        .card .bd {
+            padding: 14px 16px 16px;
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .chip {
+            font-size: 12px;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            background: #fafafa;
+            padding: 6px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .lead {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .callout {
+            border-left: 4px solid var(--accent);
+            background: #f4f7ff;
+            border-radius: 12px;
+            padding: 12px 12px;
+            color: var(--text);
+        }
+
+        .callout strong {
+            font-weight: 800;
+        }
+
+        .callout p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .section {
+            margin-top: 14px;
+        }
+
+        .bullets {
+            margin: 8px 0 0 18px;
+            padding: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .bullets li {
+            margin: 6px 0;
+        }
+
+        pre {
+            margin: 10px 0 0;
+            background: var(--code);
+            color: rgba(255, 255, 255, .92);
+            border-radius: 12px;
+            padding: 12px 12px;
+            overflow: auto;
+            font-family: var(--mono);
+            font-size: 12.6px;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: var(--mono);
+            word-break: break-word;
+            /* Prevents long variables from causing horizontal scroll */
+        }
+
+        .prims {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .prim {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 12px;
+            background: #ffffff;
+        }
+
+        .prim .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .2px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #fafafa;
+            margin-bottom: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .prim.extract .dot {
+            background: var(--accent3);
+        }
+
+        .prim.verify .dot {
+            background: var(--accent);
+        }
+
+        .prim.integrate .dot {
+            background: var(--accent2);
+        }
+
+        .prim h4 {
+            margin: 0 0 6px;
+            font-size: 15px;
+            letter-spacing: -0.2px;
+        }
+
+        .prim p {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .prim ul {
+            margin: 0 0 0 18px;
+            padding: 0;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .prim li {
+            margin: 6px 0;
+        }
+
+        .miniGrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            /* Changed to 3 columns for full width utilization */
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .kv:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .kv .k {
+            font-weight: 800;
+            color: var(--text);
+            font-size: 13.5px;
+        }
+
+        .kv .v {
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        details {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: #fff;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        footer {
+            margin-top: 16px;
+            color: var(--muted2);
+            font-size: 12.5px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Diagram styles specific to ISB */
+        .diagramWrap {
+            padding: 10px 12px 14px;
+        }
+
+        .diagramNote {
+            padding: 0 16px 14px;
+            color: var(--muted2);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .grid2 {
+                grid-template-columns: 1fr;
+            }
+
+            .prims {
+                grid-template-columns: 1fr;
+            }
+
+            .miniGrid {
+                grid-template-columns: 1fr;
+            }
+
+            .chips {
+                justify-content: flex-start;
+            }
+
+            .kv {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Print */
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .card {
+                box-shadow: none;
+            }
+
+            .chip {
+                background: #fff;
+            }
+
+            pre {
+                color: #111;
+                background: #f3f4f6;
+                border: 1px solid #e5e7eb;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <div class="kicker"><span class="bar"></span><span>Intelligent Verification • Agentic AI • Salesforce
+                    Integrated</span></div>
+            <h1>Enterprise AI Microservice — Architecture Overview</h1>
+            <p class="sub">
+                The **Document Analyzer** is a robust, distributed microservice for high-scale document verification. It
+                features **smart request chaining**, **multi-agent reasoning**, **zero-leakage security**, and
+                **granular concurrency control**.
+            </p>
+        </header>
+
+        <!-- TOP SECTION: 2-Column Grid -->
+        <section class="grid2">
+            <!-- Diagram -->
+            <div class="card">
+                <div class="hd">
+                    <h2>Architecture (diagram)</h2>
+                    <div class="chips">
+                        <span class="chip">Stack: FastAPI + CrewAI + Gemini</span>
+                        <span class="chip">Scale: Async Workers</span>
+                        <span class="chip">Security: Ephemeral Processing</span>
+                    </div>
+                </div>
+
+                <div class="diagramWrap">
+                    <svg viewBox="0 0 980 280" width="100%" height="auto" role="img" aria-label="Architecture Diagram">
+                        <defs>
+                            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8"
+                                orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#111827"></path>
+                            </marker>
+                        </defs>
+
+                        <rect x="20" y="20" width="940" height="240" rx="16" fill="#ffffff" stroke="#e5e7eb" />
+
+                        <g>
+                            <!-- Salesforce -->
+                            <rect x="50" y="70" width="160" height="86" rx="14" fill="#f4f7ff" stroke="#c7d2fe" />
+                            <text x="130" y="105" text-anchor="middle" fill="#111827" font-size="18"
+                                font-weight="700">Salesforce</text>
+                            <text x="130" y="130" text-anchor="middle" fill="#6b7280" font-size="13">Trigger & Data
+                                Source</text>
+
+                            <!-- API Gateway / Job Manager -->
+                            <rect x="300" y="70" width="160" height="86" rx="14" fill="#f9fafb" stroke="#e5e7eb" />
+                            <text x="380" y="105" text-anchor="middle" fill="#111827" font-size="18"
+                                font-weight="700">API Server</text>
+                            <text x="380" y="130" text-anchor="middle" fill="#6b7280" font-size="13">FastAPI + Job
+                                Mgr</text>
+
+                            <!-- Worker / Processor -->
+                            <rect x="550" y="70" width="160" height="86" rx="14" fill="#f9fafb" stroke="#e5e7eb" />
+                            <text x="630" y="105" text-anchor="middle" fill="#111827" font-size="18"
+                                font-weight="700">Processor</text>
+                            <text x="630" y="130" text-anchor="middle" fill="#6b7280" font-size="13">Orchestrates
+                                Crews</text>
+
+                            <!-- CrewAI / Agents -->
+                            <rect x="800" y="64" width="140" height="98" rx="14" fill="#2563eb" stroke="#1d4ed8" />
+                            <text x="870" y="105" text-anchor="middle" fill="#ffffff" font-size="18"
+                                font-weight="800">CrewAI</text>
+                            <text x="870" y="129" text-anchor="middle" fill="#ffffff" font-size="18"
+                                font-weight="800">Agents</text>
+                            <text x="870" y="150" text-anchor="middle" fill="rgba(255,255,255,.85)"
+                                font-size="12">Intelligent Verify</text>
+                        </g>
+
+                        <!-- Arrows -->
+                        <path d="M 210 113 L 300 113" stroke="#111827" stroke-width="2" marker-end="url(#arrow)" />
+                        <path d="M 460 113 L 550 113" stroke="#111827" stroke-width="2" marker-end="url(#arrow)" />
+                        <path d="M 710 113 L 800 113" stroke="#111827" stroke-width="2" marker-end="url(#arrow)" />
+
+                        <!-- Services Layer -->
+                        <rect x="280" y="210" width="600" height="40" rx="999" fill="#f9fafb" stroke="#e5e7eb" />
+                        <text x="400" y="235" fill="#7c3aed" font-size="13" font-weight="800">Extraction Service</text>
+                        <text x="510" y="235" fill="#374151" font-size="13">(Gemini OCR)</text>
+
+                        <text x="630" y="235" fill="#374151" font-size="13">•</text>
+
+                        <text x="660" y="235" fill="#2563eb" font-size="13" font-weight="800">Salesforce Service</text>
+                        <text x="780" y="235" fill="#374151" font-size="13">(Integration)</text>
+
+                        <!-- Labels -->
+                        <text x="255" y="100" fill="#6b7280" font-size="11" text-anchor="middle">JSON Trigger</text>
+                        <text x="505" y="100" fill="#6b7280" font-size="11" text-anchor="middle">Async Job</text>
+                    </svg>
+                </div>
+
+                <div class="diagramNote">
+                    Mental model: **Salesforce** asks, **Processor** extracts & coordinates, **CrewAI** thinks &
+                    verifies.
+                </div>
+            </div>
+
+            <!-- Quick scan -->
+            <div class="card">
+                <div class="hd">
+                    <h2>Quick scan</h2>
+                    <div class="chips">
+                        <span class="chip">Extract = SEE</span>
+                        <span class="chip">Verify = THINK</span>
+                        <span class="chip">Report = SPEAK</span>
+                    </div>
+                </div>
+                <div class="bd">
+                    <div class="callout">
+                        <strong>One-line summary</strong>
+                        <p>An automated pipeline that converts raw documents into structured verification reports using
+                            GenAI agents, eliminating manual review.</p>
+                    </div>
+
+                    <div class="section" style="margin-top:12px;">
+                        <div class="kv">
+                            <div class="k">Input</div>
+                            <div class="v">Salesforce Record ID (contains Data + Document Base64).</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Extraction</div>
+                            <div class="v">Gemini 1.5 Pro converts Images/PDFs to structured Markdown.</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Verification</div>
+                            <div class="v">Specialized CrewAI Agents compare Record Data vs. Document Text.</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">Output</div>
+                            <div class="v">Confidence Score & HTML Report pushed back to Salesforce.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- MAIN CONTENT: Full Width Sections -->
+
+        <!-- High-level workflow (Text) -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>High-level workflow (text)</h2>
+                    <div class="chips">
+                        <span class="chip">Pipeline</span>
+                    </div>
+                </div>
+                <div class="bd">
+                    <pre><code>User (Salesforce)
+  │
+  ▼
+API Endpoint (/analyze)
+  │
+  ▼
+Job Manager (Queue & De-duplication)
+  │
+  ▼
+Worker Process (Background)
+  ├─ 1. Fetch SF Record & Document
+  │
+  ├─ 2. Extraction Service (Gemini OCR)
+  │      └─ PDF/Image ➔ Markdown Text
+  │
+  ├─ 3. CrewAI Orchestrator
+  │      ├─ Data Comparator Agent (Reasoning)
+  │      └─ Report Generator Agent (Synthesis)
+  │
+  └─ 4. Push Results to Salesforce (AVS Record)</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Core Primitives -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>Core Primitives</h2>
+                    <div class="chips">
+                        <span class="chip">Modular design</span>
+                    </div>
+                </div>
+                <div class="bd">
+                    <p class="lead">The system is built on three specialized pillars, each handling a distinct
+                        phase of
+                        the pipeline.</p>
+
+                    <div class="prims"> <!-- 3-Column internal grid -->
+                        <div class="prim extract">
+                            <div class="tag"><span class="dot"></span>Extraction — SEE</div>
+                            <h4>Enables the AI to <span style="color:var(--accent3); font-weight:900;">READ</span></h4>
+                            <p>Converts unstructured visual data into machine-readable text.</p>
+                            <ul>
+                                <li><strong>Gemini 1.5 Pro</strong> for high-fidelity OCR.</li>
+                                <li>Handles multi-page PDFs & Images.</li>
+                                <li>Outputs structured Markdown.</li>
+                            </ul>
+                        </div>
+
+                        <div class="prim verify">
+                            <div class="tag"><span class="dot"></span>Crew Orchestration — THINK</div>
+                            <h4>Enables the AI to <span style="color:var(--accent); font-weight:900;">REASON</span></h4>
+                            <p>Multi-agent crews that apply human-like verification logic.</p>
+                            <ul>
+                                <li><strong>Comparator Agent</strong>: Fuzzy matching.</li>
+                                <li><strong>Report Agent</strong>: Business synthesis.</li>
+                                <li>Domain-specific rules (Edu, Emp, ID).</li>
+                            </ul>
+                        </div>
+
+                        <div class="prim integrate">
+                            <div class="tag"><span class="dot"></span>Services — ACT</div>
+                            <h4>Enables the AI to <span style="color:var(--accent2); font-weight:900;">CONNECT</span>
+                            </h4>
+                            <p>Bridges the gap between the AI Server and the System of Record.</p>
+                            <ul>
+                                <li><strong>Salesforce Service</strong>: Bi-directional sync.</li>
+                                <li><strong>Job Manager</strong>: State persistence.</li>
+                                <li><strong>Rate Limiter</strong>: Traffic control.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Enterprise Capabilities -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>Enterprise Capabilities</h2>
+                    <div class="chips">
+                        <span class="chip">Robustness</span>
+                        <span class="chip">Control</span>
+                        <span class="chip">Security</span>
+                    </div>
+                </div>
+                <div class="bd">
+                    <div class="miniGrid"> <!-- 3-Column internal grid for full width usage -->
+                        <div class="prim integrate">
+                            <div class="tag"><span class="dot"></span>Intelligent Orchestration</div>
+                            <h4>Smart Chain Reaction</h4>
+                            <p>Automated discovery and processing of related records.</p>
+                            <ul class="bullets">
+                                <li><strong>Auto-Fetch:</strong> Single Application ID trigger automatically discovers
+                                    related Education, Employment, and Test Score records.</li>
+                                <li><strong>Smart Filtering:</strong> Processes only relevant sub-types (e.g.,
+                                    "Full-Time" jobs).</li>
+                            </ul>
+                        </div>
+
+                        <div class="prim integrate">
+                            <div class="tag"><span class="dot"></span>High-Performance Compute</div>
+                            <h4>Concurrency & Scale</h4>
+                            <p>Granular traffic control and resource isolation.</p>
+                            <ul class="bullets">
+                                <li><strong>Semaphore Guard:</strong> Strict
+                                    <code>MAX_CONCURRENT_PROCESSING_SLOTS</code> limit (Configurable) prevents overload.
+                                </li>
+                                <li><strong>Process Isolation:</strong> Each job runs in a dedicated worker process for
+                                    fault containment.</li>
+                            </ul>
+                        </div>
+
+                        <div class="prim integrate">
+                            <div class="tag"><span class="dot"></span>Security & Observability</div>
+                            <h4>Zero-Leakage & Admin</h4>
+                            <p>Designed for compliance and operational visibility.</p>
+                            <ul class="bullets">
+                                <li><strong>Ephemeral Data:</strong> In-memory processing only; no temporary files
+                                    written to disk (Compliance Safe).</li>
+                                <li><strong>Admin API:</strong> Monitor Queue Overview and Job Status.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Micro-Level Details -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>Micro-Level Details</h2>
+                    <div class="chips"><span class="chip">Logic</span></div>
+                </div>
+                <div class="bd">
+                    <ul class="bullets">
+                        <li><strong>Fuzzy Matching:</strong> Uses >80% similarity threshold for names/companies.</li>
+                        <li><strong>Smart Rules:</strong> Handles cultural name variations, date formats, and currency
+                            conversion.</li>
+                        <li><strong>Strict Scoring:</strong> Mandated 3-way matching (API vs Applicant vs Doc) for Test
+                            Scores.</li>
+                        <li><strong>Fallback:</strong> "Value Not Found" penalties vs "Critical Mismatch" failures.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trust boundary -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>Trust, Reliability, & Compliance Boundary</h2>
+                    <div class="chips"><span class="chip">Enterprise Grade</span></div>
+                </div>
+                <div class="bd">
+                    <ul class="bullets">
+                        <li><strong>Safe Concurrency:</strong> The `JobManager` enforces strict slot limits (Default: 15
+                            slots) and handles queue de-duplication idempotency.</li>
+                        <li><strong>Zero-Leakage Guarantee:</strong> Documents are processed via Base64 streams in
+                            memory. Worker processes are destroyed post-execution, ensuring no residue.</li>
+                        <li><strong>Fault Tolerance:</strong> "Smart" error handling distinguishes between ephemeral API
+                            glitches (retryable) and permanent data issues (reported to admin).</li>
+                    </ul>
+
+                    <div style="margin-top:10px;" class="callout">
+                        <strong>Business Logic Implementation</strong>
+                        <pre style="margin-top:8px;"><code>If Critical Field Mismatch:
+   Confidence -= 30%
+   Status = "Needs Review" / "Failed"
+   
+If Minor Variance (e.g., Typo):
+   Confidence = 100% (No Penalty)
+   Status = "Verified"</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Processing Lifecycle -->
+        <section class="section">
+            <div class="card">
+                <div class="hd">
+                    <h2>Processing Lifecycle</h2>
+                    <div class="chips"><span class="chip">Flow</span></div>
+                </div>
+                <div class="bd">
+                    <pre><code>1. POST request initiates Job
+2. Background Task claims slot
+3. Documents extracted to text
+4. Agents run sequentially:
+   - Compare Field A vs B
+   - Draft Reasoning
+   - Calculate Confidence
+5. Final JSON Report generated
+6. Upsert to Salesforce Object</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <span>Generated for Salesforce Custom AI Integration</span>
+            <span>Confidential & Proprietary</span>
+        </footer>
+    </div>
+</body>
+
+</html>
